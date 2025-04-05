@@ -53,22 +53,7 @@ async function main() {
   await mongoose.connect(uri);
 }*/
 
-app.use(
-  cors({
-    origin: "http://localhost:3001", // Allow your frontend's origin
-    methods: ["GET", "POST"],
-    credentials: true, // Allow credentials if needed
-  })
-);
-
-
-app.use("/api/v1/users", userRoutes);
-app.use(cors());
-
-
-app.get("/",(req,res)=>{
-  return res.json({"hello":"world"})
-});
+ 
 
 //app.use(bodyParser.json());
 
