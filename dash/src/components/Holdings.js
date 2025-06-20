@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios, { all } from "axios";
 import { VerticalGraph } from "./VerticalGraph";
 
-// import { holdings } from "../data/data";
+import { holdings } from "../data/data";
 
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
@@ -12,6 +12,16 @@ const Holdings = () => {
       setAllHoldings(res.data);
     });
   }, []);
+
+  const sendHoldingsToBackend = async () => {
+    try {
+      const res = await axios.post("http://localhost:3000/saveHoldings", holdings);
+      alert("✅ Holdings sent to backend!");
+    } catch (err) {
+      console.error(" Failed to send holdings:", err);
+      alert(" Error sending holdings");
+    }
+  };
 
   const labels = allHoldings.map((subArray) => subArray["name"]);
 
@@ -26,25 +36,13 @@ const Holdings = () => {
     ],
   };
 
-  // export const data = {
-  //   labels,
-  //   datasets: [
-  // {
-  //   label: 'Dataset 1',
-  //   data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-  //   backgroundColor: 'rgba(255, 99, 132, 0.5)',
-  // },
-  //     {
-  //       label: 'Dataset 2',
-  //       data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-  //       backgroundColor: 'rgba(53, 162, 235, 0.5)',
-  //     },
-  //   ],
-  // };
-
   return (
     <>
       <h3 className="title">Holdings ({allHoldings.length})</h3>
+
+      {/* Send Button */}
+      <button onClick={sendHoldingsToBackend} style={{ marginBottom: "10px" }}>
+      </button>
 
       <div className="order-table">
         <table>

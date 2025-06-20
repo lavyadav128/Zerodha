@@ -1,16 +1,5 @@
-/*const { model } = require("mongoose");
+// model/HoldingsModel.js
+import mongoose from "mongoose";
+import { HoldingsSchema } from "../schema/HoldingsSchema.js"; // Use named import
 
-const { HoldingsSchema } = require("../schema/HoldingsSchema");
-
-const HoldingsModel = new model("holding", HoldingsSchema);
-
-module.exports = { HoldingsModel };*/
-
-import { model } from "mongoose";
-import { HoldingsSchema } from "../schema/HoldingsSchema.js"; // Ensure correct file extension
-
-const HoldingsModel = model("holding", HoldingsSchema);
-
-export { HoldingsModel };
-
-
+export const HoldingsModel = mongoose.model("Holding", HoldingsSchema);

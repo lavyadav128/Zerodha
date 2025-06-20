@@ -1,27 +1,12 @@
-/*const { Schema } = require("mongoose");
+// schema/HoldingsSchema.js
+import mongoose from "mongoose";
 
-const HoldingsSchema = new Schema({
-  name: String,
-  qty: Number,
-  avg: Number,
-  price: Number,
-  net: String,
-  day: String,
+export const HoldingsSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  qty: { type: Number, required: true },
+  avg: { type: Number, required: true },
+  price: { type: Number, required: true },
+  net: { type: String, required: true },
+  day: { type: String, required: true },
+  isLoss: { type: Boolean, default: false },
 });
-
-module.exports = { HoldingsSchema };*/
-
-
-import { Schema } from "mongoose";
-
-const HoldingsSchema = new Schema({
-  name: String,
-  qty: Number,
-  avg: Number,
-  price: Number,
-  net: String,
-  day: String,
-});
-
-export { HoldingsSchema };
-

@@ -1,30 +1,11 @@
-/*const { Schema } = require("mongoose");
+import mongoose from "mongoose";
 
-const OrdersSchema = new Schema({
-  name: String,
-  qty: Number,
-  price: Number,
-  mode: String,
-});
-
-module.exports = { OrdersSchema };*/
-
-
-
-
-
-
-
-
-
-import { Schema } from "mongoose";
-
-const OrdersSchema = new Schema({
-  name: String,
-  qty: Number,
-  price: Number,
-  mode: String,
-});
-
-export { OrdersSchema };
-
+export const OrdersSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    qty: { type: Number, required: true },
+    price: { type: Number, required: true },
+    mode: { type: String, enum: ["BUY", "SELL"], required: true }, // restrict to BUY or SELL
+  },
+  { timestamps: true }
+);
