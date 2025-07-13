@@ -23,12 +23,13 @@ const io = connectToSocket(server);
 // ✅ CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: ["http://localhost:3001", "https://zerodhadash-wg06.onrender.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
 
 // Preflight request handling
 app.options("*", cors());
@@ -39,6 +40,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Routes
 app.use("/api/v1/users", userRoutes);
+
+
+
+app.get("/", (req, res) => {
+  console.log("Ping received at", new Date());
+  res.send("Backend is alive!");
+});
 
 // ====== Holdings ======
 app.get("/allHoldings", async (req, res) => {
