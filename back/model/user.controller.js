@@ -90,11 +90,13 @@ const register = async (req, res) => {
     await newUser.save();
 
     // Generate a JWT token for the newly registered user
+    const secret = process.env.JWT_SECRET || "default_jwt_secret"; // fallback for local/dev
     const token = jwt.sign(
       { _id: newUser._id, username: newUser.username },
-      process.env.JWT_SECRET,
+      secret,
       { expiresIn: "7d" }
     );
+    
 
     // Send back a 201 Created response with success message and token
     return res.status(httpStatus.CREATED).json({
@@ -103,12 +105,13 @@ const register = async (req, res) => {
       username: newUser.username, // Username of the new user
       name: newUser.name,         // Name of the new user
     });
-  } catch (e) {
-    // If any error occurs during the process, return 500 Internal Server Error
+} catch (e) {
+    console.error("🔥 REGISTER ERROR:", e); // 👈 Add this line
     return res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
       .json({ message: `Error: ${e.message}` });
   }
+  
 };
 
 // Export both login and register functions for use in routes
