@@ -1,91 +1,88 @@
-// src/contexts/AuthContext.js
-import axios from "axios";
-import httpStatus from "http-status";
-import { createContext, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// Import required modules
+import axios from "axios";                           // Axios for HTTP requests
+import httpStatus from "http-status";               // Standard HTTP status codes
+import { createContext, useState } from "react";    // React context and state
+import { useNavigate } from "react-router-dom";     // Hook for programmatic navigation
+import server from "../environment";                // Your backend base URL (should export a string)
 
+// Create a new context for authentication
 export const AuthContext = createContext({});
 
+// Create an axios instance with base URL
 const client = axios.create({
-    baseURL: `http://localhost:3000/api/v1/users` // Make sure backend runs on 3001
+  baseURL: `${server}`,                             // e.g., "http://localhost:3000"
 });
 
+// Define the AuthProvider component to wrap around app
 export const AuthProvider = ({ children }) => {
-    const authContext = useContext(AuthContext);
-    const [userData, setUserData] = useState(authContext);
-    const router = useNavigate();
+  const [userData, setUserData] = useState(null);   // State to hold logged-in user info (if needed)
+  const router = useNavigate();                     // React Router navigation function
 
-    const handleRegister = async (name, username, password) => {
-        try {
-            const request = await client.post("/register", {
-                name,
-                username,
-                password
-            });
+  // Handle user registration
+  const handleRegister = async (name, username, password) => {
+    try {
+      // Send POST request to /api/register
+      const res = await client.post("/api/register", { name, username, password });
 
-            if (request.status === httpStatus.CREATED) {
-                return request.data.message;
-            }
-        } catch (err) {
-            throw err;
-        }
-    };
+      // If registration is successful
+      if (res.status === httpStatus.CREATED) {
+        const { token, username: registeredUsername } = res.data;
 
-    const handleLogin = async (username, password) => {
-        try {
-            const request = await client.post("/login", {
-                username,
-                password
-            });
+        // Save token and username in localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", registeredUsername); // ✅ Save username
 
-            console.log("Login Response:", request.data);
+        // Redirect to dashboard (optional)
+        router("/dashboard");
 
-            if (request.status === httpStatus.OK) {
-                localStorage.setItem("token", request.data.token);
-                router("/dashboard");
-            }
-        } catch (err) {
-            throw err;
-        }
-    };
+        // Return success message to show in UI
+        return res.data.message;
+      }
+    } catch (err) {
+      // Re-throw error to be handled in UI
+      throw err;
+    }
+  };
 
-    const getHistoryOfUser = async () => {
-        try {
-            const request = await client.get("/get_all_activity", {
-                params: {
-                    token: localStorage.getItem("token")
-                }
-            });
-            return request.data;
-        } catch (err) {
-            throw err;
-        }
-    };
+  // Handle user login
+  const handleLogin = async (username, password) => {
+    try {
+      // Send POST request to /api/login
+      const res = await client.post("/api/login", { username, password });
 
-    const addToUserHistory = async (meetingCode) => {
-        try {
-            const request = await client.post("/add_to_activity", {
-                token: localStorage.getItem("token"),
-                meeting_code: meetingCode
-            });
-            return request;
-        } catch (e) {
-            throw e;
-        }
-    };
+      // If login is successful
+      if (res.status === httpStatus.OK) {
+        const { token, username: loggedInUsername } = res.data;
 
-    const data = {
-        userData,
-        setUserData,
-        addToUserHistory,
-        getHistoryOfUser,
-        handleRegister,
-        handleLogin
-    };
+        // Save token and username in localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", loggedInUsername); // ✅ Save username
 
-    return (
-        <AuthContext.Provider value={data}>
-            {children}
-        </AuthContext.Provider>
-    );
+        // Redirect to dashboard
+        router("/dashboard");
+      }
+    } catch (err) {
+      // Re-throw error to be handled in UI
+      throw err;
+    }
+  };
+
+  // Axios request interceptor to add Authorization header automatically
+  client.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");      // Get token from localStorage
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`; // Add Bearer token to headers
+    }
+    return config;
+  });
+
+  // Provide data and functions to context consumers
+  const data = {
+    setUserData,
+    handleRegister,
+    handleLogin,
+  };
+
+  // Wrap children with AuthContext provider
+  return <AuthContext.Provider value={data}>{children}</AuthContext.Provider>;
 };
