@@ -1,63 +1,152 @@
 import React from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Divider,
+  Grid,
+  Stack,
+  Chip,
+} from "@mui/material";
 
 const Summary = () => {
   return (
-    <>
-      <div className="username">
-        <h6>Hi, User!</h6>
-        <hr className="divider" />
-      </div>
+    <Box sx={{ padding: 3, bgcolor: "#f8f9fa", minHeight: "100vh" }}>
+      {/* Greeting Section */}
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        color="primary"
+        sx={{ mb: 2 }}
+      >
+        Hi, User! 👋
+      </Typography>
+      <Divider sx={{ mb: 3 }} />
 
-      <div className="section">
-        <span>
-          <p>Equity</p>
-        </span>
+      {/* Equity Section */}
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          transition: "0.3s",
+          "&:hover": { boxShadow: "0 6px 18px rgba(0, 0, 0, 0.2)" },
+        }}
+      >
+        <CardContent>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            Equity
+          </Typography>
+          <Grid container spacing={3} alignItems="center">
+            {/* Left Section */}
+            <Grid item xs={12} md={4}>
+              <Typography variant="h4" color="success.main" fontWeight="bold">
+                ₹3.74k
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Margin Available
+              </Typography>
+            </Grid>
 
-        <div className="data">
-          <div className="first">
-            <h3>3.74k</h3>
-            <p>Margin available</p>
-          </div>
-          <hr />
+            {/* Divider */}
+            <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
 
-          <div className="second">
-            <p>
-              Margins used <span>0</span>{" "}
-            </p>
-            <p>
-              Opening balance <span>3.74k</span>{" "}
-            </p>
-          </div>
-        </div>
-        <hr className="divider" />
-      </div>
+            {/* Right Section */}
+            <Grid item xs={12} md={7}>
+              <Stack spacing={1}>
+                <Typography variant="body1">
+                  Margins Used:{" "}
+                  <Chip
+                    label="₹0"
+                    color="success"
+                    size="small"
+                    sx={{ fontWeight: "bold" }}
+                  />
+                </Typography>
+                <Typography variant="body1">
+                  Opening Balance:{" "}
+                  <Chip
+                    label="₹3.74k"
+                    color="primary"
+                    size="small"
+                    sx={{ fontWeight: "bold" }}
+                  />
+                </Typography>
+              </Stack>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-      <div className="section">
-        <span>
-          <p>Holdings (13)</p>
-        </span>
+      {/* Holdings Section */}
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          transition: "0.3s",
+          "&:hover": { boxShadow: "0 6px 18px rgba(0, 0, 0, 0.2)" },
+        }}
+      >
+        <CardContent>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            Holdings (13)
+          </Typography>
+          <Grid container spacing={3} alignItems="center">
+            {/* Left Section */}
+            <Grid item xs={12} md={4}>
+              <Typography
+                variant="h4"
+                sx={{ color: "#00c853", fontWeight: "bold" }}
+              >
+                ₹1.55k{" "}
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.9rem",
+                    color: "#00c853",
+                    fontWeight: "bold",
+                  }}
+                >
+                  +5.20%
+                </Typography>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                P&amp;L
+              </Typography>
+            </Grid>
 
-        <div className="data">
-          <div className="first">
-            <h3 className="profit">
-              1.55k <small>+5.20%</small>{" "}
-            </h3>
-            <p>P&L</p>
-          </div>
-          <hr />
+            {/* Divider */}
+            <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
 
-          <div className="second">
-            <p>
-              Current Value <span>31.43k</span>{" "}
-            </p>
-            <p>
-              Investment <span>29.88k</span>{" "}
-            </p>
-          </div>
-        </div>
-        <hr className="divider" />
-      </div>
-    </>
+            {/* Right Section */}
+            <Grid item xs={12} md={7}>
+              <Stack spacing={1}>
+                <Typography variant="body1">
+                  Current Value:{" "}
+                  <Chip
+                    label="₹31.43k"
+                    color="primary"
+                    size="small"
+                    sx={{ fontWeight: "bold" }}
+                  />
+                </Typography>
+                <Typography variant="body1">
+                  Investment:{" "}
+                  <Chip
+                    label="₹29.88k"
+                    color="secondary"
+                    size="small"
+                    sx={{ fontWeight: "bold" }}
+                  />
+                </Typography>
+              </Stack>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

@@ -1,106 +1,156 @@
 import React, { useState, useEffect } from "react";
-import axios, { all } from "axios";
+import axios from "axios";
 import { VerticalGraph } from "./VerticalGraph";
-
-import { holdings } from "../data/data";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    axios.get("http://localhost:3000/allHoldings").then((res) => {
-      setAllHoldings(res.data);
-    });
-  }, []);
-
-  const sendHoldingsToBackend = async () => {
+  // Fetch holdings from backend
+  const fetchHoldings = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/saveHoldings", holdings);
-      alert("✅ Holdings sent to backend!");
+      setLoading(true);
+      const res = await axios.get("http://localhost:3000/allHoldings");
+      setAllHoldings(res.data);
     } catch (err) {
-      console.error(" Failed to send holdings:", err);
-      alert(" Error sending holdings");
+      setError("Failed to fetch holdings");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const labels = allHoldings.map((subArray) => subArray["name"]);
+  // Auto-refresh prices every 5 seconds
+  useEffect(() => {
+    fetchHoldings();
+    const interval = setInterval(fetchHoldings, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
+  // Send dummy holdings to backend
+  const sendHoldingsToBackend = async () => {
+    try {
+      await axios.post("http://localhost:3000/saveHoldings", allHoldings);
+      alert("✅ Holdings synced successfully!");
+    } catch (err) {
+      alert("❌ Failed to sync holdings!");
+    }
+  };
+
+  // Portfolio calculations
+  const totalInvestment = allHoldings.reduce((acc, stock) => acc + stock.avg * stock.qty, 0);
+  const currentValue = allHoldings.reduce((acc, stock) => acc + stock.price * stock.qty, 0);
+  const totalPnL = currentValue - totalInvestment;
+  const percentageChange = ((totalPnL / totalInvestment) * 100).toFixed(2);
+
+  const labels = allHoldings.map(stock => stock.name);
   const data = {
     labels,
     datasets: [
       {
-        label: "Stock Price",
-        data: allHoldings.map((stock) => stock.price),
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        label: "Stock Prices",
+        data: allHoldings.map(stock => stock.price),
+        backgroundColor: "rgba(75,192,192,0.6)",
       },
     ],
   };
 
-  return (
-    <>
-      <h3 className="title">Holdings ({allHoldings.length})</h3>
+  if (loading) return <h3 className="text-center mt-4">Loading holdings...</h3>;
+  if (error) return <h3 className="text-danger text-center mt-4">{error}</h3>;
 
-      {/* Send Button */}
-      <button onClick={sendHoldingsToBackend} style={{ marginBottom: "10px" }}>
+  return (
+    <div className="container mt-4">
+      <h3 className="text-primary mb-3">
+        Holdings ({allHoldings.length})
+      </h3>
+
+      {/* Portfolio Insights */}
+      <div className="row mb-3">
+        <div className="col-md-3 col-6">
+          <div className="card p-3 shadow-sm">
+            <h5>₹{totalInvestment.toFixed(2)}</h5>
+            <p className="text-muted">Total Investment</p>
+          </div>
+        </div>
+        <div className="col-md-3 col-6">
+          <div className="card p-3 shadow-sm">
+            <h5>₹{currentValue.toFixed(2)}</h5>
+            <p className="text-muted">Current Value</p>
+          </div>
+        </div>
+        <div className="col-md-3 col-6">
+          <div className="card p-3 shadow-sm">
+            <h5 className={totalPnL >= 0 ? "text-success" : "text-danger"}>
+              ₹{totalPnL.toFixed(2)}
+            </h5>
+            <p className="text-muted">Total P&L</p>
+          </div>
+        </div>
+        <div className="col-md-3 col-6">
+          <div className="card p-3 shadow-sm">
+            <h5 className={totalPnL >= 0 ? "text-success" : "text-danger"}>
+              {percentageChange}%
+            </h5>
+            <p className="text-muted">Overall Change</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sync Holdings Button */}
+      <button
+        onClick={sendHoldingsToBackend}
+        className="btn btn-primary mb-3"
+      >
+        Sync Holdings
       </button>
 
-      <div className="order-table">
-        <table>
-          <tr>
-            <th>Instrument</th>
-            <th>Qty.</th>
-            <th>Avg. cost</th>
-            <th>LTP</th>
-            <th>Cur. val</th>
-            <th>P&L</th>
-            <th>Net chg.</th>
-            <th>Day chg.</th>
-          </tr>
+      {/* Holdings Table */}
+      <div className="table-responsive shadow-sm">
+        <table className="table table-striped table-hover">
+          <thead className="table-dark">
+            <tr>
+              <th>Instrument</th>
+              <th>Qty</th>
+              <th>Avg. Cost</th>
+              <th>LTP</th>
+              <th>Cur. Value</th>
+              <th>P&L</th>
+              <th>Net Chg.</th>
+              <th>Day Chg.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allHoldings.map((stock, index) => {
+              const curValue = stock.price * stock.qty;
+              const isProfit = curValue - stock.avg * stock.qty >= 0;
+              const profClass = isProfit ? "text-success" : "text-danger";
+              const dayClass = stock.isLoss ? "text-danger" : "text-success";
 
-          {allHoldings.map((stock, index) => {
-            const curValue = stock.price * stock.qty;
-            const isProfit = curValue - stock.avg * stock.qty >= 0.0;
-            const profClass = isProfit ? "profit" : "loss";
-            const dayClass = stock.isLoss ? "loss" : "profit";
-
-            return (
-              <tr key={index}>
-                <td>{stock.name}</td>
-                <td>{stock.qty}</td>
-                <td>{stock.avg.toFixed(2)}</td>
-                <td>{stock.price.toFixed(2)}</td>
-                <td>{curValue.toFixed(2)}</td>
-                <td className={profClass}>
-                  {(curValue - stock.avg * stock.qty).toFixed(2)}
-                </td>
-                <td className={profClass}>{stock.net}</td>
-                <td className={dayClass}>{stock.day}</td>
-              </tr>
-            );
-          })}
+              return (
+                <tr key={index}>
+                  <td>{stock.name}</td>
+                  <td>{stock.qty}</td>
+                  <td>{stock.avg.toFixed(2)}</td>
+                  <td>{stock.price.toFixed(2)}</td>
+                  <td>{curValue.toFixed(2)}</td>
+                  <td className={profClass}>
+                    {(curValue - stock.avg * stock.qty).toFixed(2)}
+                  </td>
+                  <td className={profClass}>{stock.net}</td>
+                  <td className={dayClass}>{stock.day}</td>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </div>
 
-      <div className="row">
-        <div className="col">
-          <h5>
-            29,875.<span>55</span>{" "}
-          </h5>
-          <p>Total investment</p>
-        </div>
-        <div className="col">
-          <h5>
-            31,428.<span>95</span>{" "}
-          </h5>
-          <p>Current value</p>
-        </div>
-        <div className="col">
-          <h5>1,553.40 (+5.20%)</h5>
-          <p>P&L</p>
-        </div>
+      {/* Graph */}
+      <div className="mt-4">
+        <VerticalGraph data={data} />
       </div>
-      <VerticalGraph data={data} />
-    </>
+    </div>
   );
 };
 

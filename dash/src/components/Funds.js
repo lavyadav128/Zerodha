@@ -11,6 +11,9 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 
@@ -19,54 +22,129 @@ const Funds = () => {
   const [openAdd, setOpenAdd] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+  const API_BASE = "http://localhost:3000";
+
+  // Fetch funds data
+  const fetchFunds = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE}/funds`);
+      setFundsData(res.data);
+    } catch (error) {
+      console.error("Error fetching funds:", error);
+      setSnackbar({ open: true, message: "Failed to load funds", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulated API call
-    axios.get("http://localhost:3000/funds").then((res) => {
-      setFundsData(res.data);
-    });
+    fetchFunds();
   }, []);
 
-  const handleAddFunds = () => {
-    axios.post("http://localhost:3000/funds/add", { amount }).then(() => {
+  // Add funds handler
+  const handleAddFunds = async () => {
+    try {
+      await axios.post(`${API_BASE}/funds/add`, { amount: parseFloat(amount) });
+      setSnackbar({ open: true, message: "Funds added successfully!", severity: "success" });
+      fetchFunds();
       setOpenAdd(false);
       setAmount("");
-    });
+    } catch (error) {
+      console.error("Error adding funds:", error);
+      setSnackbar({ open: true, message: "Failed to add funds", severity: "error" });
+    }
   };
 
-  const handleWithdrawFunds = () => {
-    axios.post("http://localhost:3000/funds/withdraw", { amount }).then(() => {
+  // Withdraw funds handler
+  const handleWithdrawFunds = async () => {
+    try {
+      await axios.post(`${API_BASE}/funds/withdraw`, { amount: parseFloat(amount) });
+      setSnackbar({ open: true, message: "Funds withdrawn successfully!", severity: "success" });
+      fetchFunds();
       setOpenWithdraw(false);
       setAmount("");
-    });
+    } catch (error) {
+      console.error("Error withdrawing funds:", error);
+      setSnackbar({
+        open: true,
+        message:
+          error.response?.data || "Failed to withdraw funds. Check balance.",
+        severity: "error",
+      });
+    }
   };
 
-  if (!fundsData) return <Typography>Loading funds...</Typography>;
+  if (loading || !fundsData) {
+    return (
+      <Box p={3} display="flex" justifyContent="center" alignItems="center">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>
-      <Typography variant="h5" gutterBottom>
+      {/* Page Header */}
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
         Funds Overview
       </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Manage your equity and commodity balances with ease.
+      </Typography>
 
-      <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
+      {/* Quick Actions */}
+      <Paper
+        elevation={1}
+        sx={{
+          p: 2,
+          mb: 3,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderRadius: 2,
+        }}
+      >
         <Typography variant="body1">
-          Instant, zero-cost fund transfers with UPI
+          Instant, zero-cost fund transfers via UPI.
         </Typography>
-        <Box mt={2} display="flex" gap={2}>
-          <Button variant="contained" color="success" onClick={() => setOpenAdd(true)}>
+        <Box display="flex" gap={1}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => setOpenAdd(true)}
+            sx={{ textTransform: "none" }}
+          >
             Add Funds
           </Button>
-          <Button variant="contained" color="primary" onClick={() => setOpenWithdraw(true)}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenWithdraw(true)}
+            sx={{ textTransform: "none" }}
+          >
             Withdraw
           </Button>
         </Box>
       </Paper>
 
-      <Grid container spacing={4}>
+      {/* Equity & Commodity Cards */}
+      <Grid container spacing={3}>
+        {/* Equity Section */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 2 }}>
-            <Typography variant="h6">Equity</Typography>
+          <Paper
+            elevation={1}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Equity
+            </Typography>
             <Divider sx={{ my: 1 }} />
 
             {[
@@ -83,20 +161,53 @@ const Funds = () => {
               { label: "Collateral (Equity)", value: fundsData.collateralEquity },
               { label: "Total collateral", value: fundsData.totalCollateral },
             ].map(({ label, value, highlight }, i) => (
-              <Box key={i} display="flex" justifyContent="space-between" my={1}>
-                <Typography>{label}</Typography>
-                <Typography color={highlight ? "green" : "text.secondary"}>₹{value}</Typography>
+              <Box
+                key={i}
+                display="flex"
+                justifyContent="space-between"
+                py={0.7}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: highlight ? "green" : "text.primary",
+                    fontWeight: highlight ? 600 : 400,
+                  }}
+                >
+                  ₹{Number(value).toLocaleString("en-IN")}
+                </Typography>
               </Box>
             ))}
           </Paper>
         </Grid>
 
+        {/* Commodity Section */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 2, textAlign: "center" }}>
-            <Typography variant="h6">Commodity</Typography>
+          <Paper
+            elevation={1}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Commodity
+            </Typography>
             <Divider sx={{ my: 1 }} />
-            <Typography>You don't have a commodity account.</Typography>
-            <Button variant="contained" sx={{ mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              You don't have a commodity account.
+            </Typography>
+            <Button
+              variant="outlined"
+              sx={{
+                mt: 2,
+                textTransform: "none",
+              }}
+            >
               Open Account
             </Button>
           </Paper>
@@ -113,11 +224,17 @@ const Funds = () => {
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenAdd(false)}>Cancel</Button>
-          <Button variant="contained" color="success" onClick={handleAddFunds}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleAddFunds}
+            disabled={!amount}
+          >
             Confirm
           </Button>
         </DialogActions>
@@ -133,15 +250,37 @@ const Funds = () => {
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenWithdraw(false)}>Cancel</Button>
-          <Button variant="contained" color="primary" onClick={handleWithdrawFunds}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleWithdrawFunds}
+            disabled={!amount}
+          >
             Confirm
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
