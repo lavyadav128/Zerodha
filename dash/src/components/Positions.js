@@ -8,7 +8,7 @@ const Positions = () => {
 
   const fetchPositions = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/positions");
+      const res = await axios.get("http://localhost:3000/allPositions");
       setPositions(res.data);
       setLoading(false);
     } catch (error) {
